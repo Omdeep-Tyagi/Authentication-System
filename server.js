@@ -10,6 +10,7 @@ const path=require("path");
 const userRouter=require("./routes/user");
 const postRouter=require("./routes/post");
 const ExpressError = require("./utils/ExpressError");
+const MongoStore = require('connect-mongo');
 require("dotenv").config();// load environment variables from .env file
 
 // Connecting to the MongoDB database
@@ -24,7 +25,10 @@ main()
     });
 
 async function main(){
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
 }
 
 //basic setting
@@ -43,6 +47,10 @@ const sessionOptions={
     secret:process.env.SESSION_SECRET,
     resave:false,
     saveUninitialized:true,
+    store: MongoStore.create({
+        mongoUrl: MONGO_URL,
+        touchAfter: 24 * 3600 // time period in seconds
+      }),
     cookie:{
         expires:Date.now()+7*24*60*60*1000, // Set cookie expiration to 7 days
         maxAge:7*24*60*60*1000,
