@@ -24,7 +24,12 @@ main()
     });
 
 async function main(){
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(MONGO_URL , {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+    });
 }
 
 //basic setting
