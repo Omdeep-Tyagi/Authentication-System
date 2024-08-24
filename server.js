@@ -3,15 +3,16 @@ const express=require("express");
 const app=express();
 const mongoose = require("mongoose");
 const passport =require("passport");
-const LocalStrategy = require("passport-local")
+const LocalStrategy = require("passport-local");
 const User= require('./models/user.js');
 const session=require("express-session");
+const methodOverride = require("method-override");
 const path=require("path");
 const userRouter=require("./routes/user");
 const postRouter=require("./routes/post");
-const ExpressError = require("./utils/ExpressError");
 const MongoStore = require('connect-mongo');
-require("dotenv").config();// load environment variables from .env file
+const errorHandler = require("./middleware/errorHandler");
+const dotenv=require("dotenv").config();// load environment variables from .env file
 
 // Connecting to the MongoDB database
 const MONGO_URL=process.env.MONGO_URL; // Get MongoDB URL from environment variables
@@ -25,10 +26,7 @@ main()
     });
 
 async function main(){
-    await mongoose.connect(MONGO_URL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+    await mongoose.connect(MONGO_URL);
 }
 
 //basic setting
@@ -38,6 +36,7 @@ app.use(express.static(path.join(__dirname,"/public")));
 
 
 // Middleware for parsing request body
+app.use(methodOverride("_method"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,21 +84,12 @@ app.get('/',(req,res)=>{
 // Use imported routers
 app.use("/",userRouter);
 app.use("/",postRouter);
-
-// Handle 404 errors for undefined routes
-app.all("*",(req,res,next)=>{
-    next(new ExpressError(404,"Page Not Found!"));
-});
-
-// Error handling middleware
-app.use((err,req,res,next)=>{  
-    let {statusCode=500,message="something went wrong!"} =err;
-    res.status(statusCode).send(message);
-});
-  
-// Start the server at port 8080
-app.listen(8080,()=>{
-    console.log("server is listening to port 8080");
+app.use(errorHandler);
+ 
+// Start the server at specified port
+const port=process.env.PORT;
+app.listen(port,()=>{
+    console.log(`server is listening to port ${port}`);
 });
 
 
